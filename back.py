@@ -69,6 +69,48 @@ class Graph:
             connections = self.adj_list[node]
             print(f"{node}: {connections}")
 
+    def detect_cycles(self):
+        """检测图中的所有非法环路（包括自环和多节点环路）"""
+        visited = set()  # 记录已访问的节点
+        cycles = set()  # 存储检测到的独立环路（以元组形式）
+
+        def dfs(node, path):
+            """递归 DFS 辅助函数，检测从 node 开始的环路"""
+            # 如果当前节点已在路径中，说明发现环路
+            if node in path:
+                cycle_start_index = path.index(node)
+                cycle = tuple(path[cycle_start_index:] + [node])
+                cycles.add(cycle)
+                return
+            # 如果节点已被访问且不在当前路径中，跳过
+            if node in visited:
+                return
+            visited.add(node)
+            path.append(node)
+            # 遍历当前节点的邻接节点
+            for neighbor in self.adj_list.get(node, {}):
+                if neighbor == node:
+                    # 检测到自环，直接记录
+                    cycles.add((node, node))
+                else:
+                    # 继续 DFS 遍历
+                    dfs(neighbor, path)
+            path.pop()  # 回溯，移除当前节点
+
+        # 从每个未访问的节点开始 DFS，确保检测所有独立环路
+        for node in self.adj_list:
+            if node not in visited:
+                dfs(node, [])
+
+        # 输出检测结果
+        if cycles:
+            print("检测到以下非法环路：")
+            for cycle in cycles:
+                print(" → ".join(cycle))
+        else:
+            print("未检测到非法环路")
+
+        return cycles
 
 def main():
     # 创建图实例
@@ -83,7 +125,7 @@ def main():
 
     # 示例动态操作
     while True:
-        action = input("\n选择操作（add_edge/delete_node/delete_edge/exit）：").strip().lower()
+        action = input("\n选择操作（add_edge/delete_node/delete_edge/detect_cycles/exit）：").strip().lower()
         if action == "add_edge":
             try:
                 start, end, resistance = input("输入边信息（格式：起点 终点 电阻值）：").split()
@@ -99,6 +141,8 @@ def main():
             start, end = input("输入要删除的边（格式：起点 终点）：").split()
             graph.delete_edge(start, end)
             graph.display_graph()
+        elif action == "detect_cycles":
+            graph.detect_cycles()
         elif action == "exit":
             print("退出程序")
             break
