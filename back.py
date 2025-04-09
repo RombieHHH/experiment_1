@@ -71,38 +71,61 @@ class Graph:
 
     def detect_cycles(self):
         """检测图中的所有非法环路（包括自环和多节点环路）"""
-        visited = set()  # 记录已访问的节点
-        cycles = set()  # 存储检测到的独立环路（以元组形式）
+        cycles = set()  # 存储检测到的环路
 
-        def dfs(node, path):
-            """递归 DFS 辅助函数，检测从 node 开始的环路"""
-            # 如果当前节点已在路径中，说明发现环路
-            if node in path:
-                cycle_start_index = path.index(node)
-                cycle = tuple(path[cycle_start_index:] + [node])
-                cycles.add(cycle)
-                return
-            # 如果节点已被访问且不在当前路径中，跳过
-            if node in visited:
-                return
-            visited.add(node)
-            path.append(node)
-            # 遍历当前节点的邻接节点
-            for neighbor in self.adj_list.get(node, {}):
-                if neighbor == node:
-                    # 检测到自环，直接记录
-                    cycles.add((node, node))
-                else:
-                    # 继续 DFS 遍历
-                    dfs(neighbor, path)
-            path.pop()  # 回溯，移除当前节点
+        # 对每个节点执行DFS
+        for start_node in self.adj_list:
+            # 当前DFS路径中的节点
+            stack = []
+            # 标记当前DFS路径中的节点
+            on_stack = set()
 
-        # 从每个未访问的节点开始 DFS，确保检测所有独立环路
-        for node in self.adj_list:
-            if node not in visited:
-                dfs(node, [])
+            def dfs(node):
+                # 如果节点已在当前路径中，找到环路
+                if node in on_stack:
+                    # 找到环路的起点位置
+                    start_idx = stack.index(node)
+                    # 获取环路节点
+                    cycle_nodes = stack[start_idx:] + [node]
 
-        # 输出检测结果
+                    # 标准化环路表示，使相同环路具有相同表示
+                    # 1. 找到环路中字典序最小的节点
+                    min_node_idx = 0
+                    min_node = cycle_nodes[0]
+                    for i, n in enumerate(cycle_nodes[:-1]):  # 最后一个节点是重复的，排除
+                        if n < min_node:
+                            min_node = n
+                            min_node_idx = i
+
+                    # 2. 从最小节点开始重新排列环路
+                    normalized_cycle = tuple(cycle_nodes[min_node_idx:-1] +
+                                             cycle_nodes[:min_node_idx] +
+                                             [cycle_nodes[min_node_idx]])
+
+                    # 添加标准化后的环路
+                    cycles.add(normalized_cycle)
+                    return
+
+                # 将节点加入当前路径
+                stack.append(node)
+                on_stack.add(node)
+
+                # 探索所有邻居
+                for neighbor in self.adj_list.get(node, {}):
+                    if neighbor == node:
+                        # 处理自环
+                        cycles.add((node, node))
+                    else:
+                        dfs(neighbor)
+
+                # 回溯：从当前路径中移除节点
+                stack.pop()
+                on_stack.remove(node)
+
+            # 从当前起点执行DFS
+            dfs(start_node)
+
+        # 输出结果
         if cycles:
             print("检测到以下非法环路：")
             for cycle in cycles:
