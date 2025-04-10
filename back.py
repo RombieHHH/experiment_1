@@ -1,3 +1,6 @@
+from heapq import heappush, heappop
+from math import inf
+
 class Graph:
     def __init__(self):
         # 使用字典嵌套字典结构存储有向邻接表
@@ -191,6 +194,69 @@ class Graph:
 
         return all_paths
 
+    def shortest_path(self, start, end):
+        """
+        使用 Dijkstra 算法计算两点间电阻最小的路径
+
+        参数:
+        start -- 起始节点
+        end -- 目标节点
+
+        返回:
+        (最小电阻值, 路径列表)
+        """
+        if start not in self.adj_list or end not in self.adj_list:
+            print(f"错误：节点 {start} 或 {end} 不存在")
+            return None
+
+        # 初始化距离字典和父节点字典
+        distances = {node: inf for node in self.adj_list}
+        distances[start] = 0
+        parents = {node: None for node in self.adj_list}
+
+        # 优先队列，存储 (当前距离, 节点) 元组
+        pq = [(0, start)]
+
+        while pq:
+            current_distance, current_node = heappop(pq)
+
+            # 如果找到目标节点，终止搜索
+            if current_node == end:
+                break
+
+            # 如果当前距离大于已知最短距离，跳过
+            if current_distance > distances[current_node]:
+                continue
+
+            # 遍历所有邻接节点
+            for neighbor, resistance in self.adj_list[current_node].items():
+                distance = current_distance + resistance
+
+                # 如果找到更短路径，更新距离和父节点
+                if distance < distances[neighbor]:
+                    distances[neighbor] = distance
+                    parents[neighbor] = current_node
+                    heappush(pq, (distance, neighbor))
+
+        # 构建最短路径
+        if distances[end] == inf:
+            print(f"不存在从 {start} 到 {end} 的路径")
+            return None
+
+        path = []
+        current = end
+        while current is not None:
+            path.append(current)
+            current = parents[current]
+        path.reverse()
+
+        # 输出结果
+        print(f"\n最短路径：{' → '.join(path)}")
+        print(f"总电阻：{distances[end]}Ω")
+
+        return distances[end], path
+
+
 def main():
     # 创建图实例
     graph = Graph()
@@ -204,7 +270,7 @@ def main():
 
     # 示例动态操作
     while True:
-        action = input("\n选择操作（add_edge/delete_node/delete_edge/detect_cycles/all_paths_simulation/exit）：").strip().lower()
+        action = input("\n选择操作（add_edge/delete_node/delete_edge/detect_cycles/all_paths_simulation/shortest_path/exit）：").strip().lower()
         if action == "add_edge":
             try:
                 start, end, resistance = input("输入边信息（格式：起点 终点 电阻值）：").split()
@@ -225,6 +291,12 @@ def main():
         elif action == "all_paths_simulation":
             start, end = input("输入仿真的路径起点和终点（格式：起点 终点）：").split()
             graph.all_paths_simulation(start, end)
+        elif action == "shortest_path":
+            try:
+                start, end = input("输入起点和终点（格式：起点 终点）：").split()
+                graph.shortest_path(start, end)
+            except ValueError:
+                print("输入格式错误")
         elif action == "exit":
             print("退出程序")
             break
