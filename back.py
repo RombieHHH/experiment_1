@@ -135,6 +135,62 @@ class Graph:
 
         return cycles
 
+    def all_paths_simulation(self, start_node, end_node):
+        """
+        计算从起点到终点的所有可能路径及总电阻值
+
+        参数:
+        start_node -- 起始节点
+        end_node -- 目标节点
+
+        返回:
+        路径列表，每个元素为(路径, 总电阻值)的元组
+        """
+        if start_node not in self.adj_list or end_node not in self.adj_list:
+            print(f"错误：节点 {start_node} 或 {end_node} 不存在")
+            return []
+
+        all_paths = []
+        current_path = [start_node]
+        visited = {node: False for node in self.adj_list}
+
+        def backtrack(node, resistance_sum):
+            # 到达终点
+            if node == end_node:
+                all_paths.append((current_path.copy(), resistance_sum))
+                return
+
+            # 标记当前节点为已访问
+            visited[node] = True
+
+            # 探索所有邻接节点
+            for neighbor, resistance in self.adj_list.get(node, {}).items():
+                # 剪枝：避免循环路径
+                if not visited[neighbor]:
+                    # 添加节点到路径
+                    current_path.append(neighbor)
+                    # 递归探索
+                    backtrack(neighbor, resistance_sum + resistance)
+                    # 回溯：移除节点
+                    current_path.pop()
+
+            # 回溯：将节点标记为未访问，允许其在其他路径中使用
+            visited[node] = False
+
+        # 开始回溯搜索
+        backtrack(start_node, 0)
+
+        # 输出结果
+        if all_paths:
+            print(f"从 {start_node} 到 {end_node} 的所有可能路径:")
+            for path, resistance in all_paths:
+                path_str = " → ".join(path)
+                print(f"{path_str} ({resistance}Ω)")
+        else:
+            print(f"没有找到从 {start_node} 到 {end_node} 的路径")
+
+        return all_paths
+
 def main():
     # 创建图实例
     graph = Graph()
@@ -148,7 +204,7 @@ def main():
 
     # 示例动态操作
     while True:
-        action = input("\n选择操作（add_edge/delete_node/delete_edge/detect_cycles/exit）：").strip().lower()
+        action = input("\n选择操作（add_edge/delete_node/delete_edge/detect_cycles/all_paths_simulation/exit）：").strip().lower()
         if action == "add_edge":
             try:
                 start, end, resistance = input("输入边信息（格式：起点 终点 电阻值）：").split()
@@ -166,6 +222,9 @@ def main():
             graph.display_graph()
         elif action == "detect_cycles":
             graph.detect_cycles()
+        elif action == "all_paths_simulation":
+            start, end = input("输入仿真的路径起点和终点（格式：起点 终点）：").split()
+            graph.all_paths_simulation(start, end)
         elif action == "exit":
             print("退出程序")
             break
