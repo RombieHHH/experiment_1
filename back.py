@@ -196,7 +196,7 @@ class Graph:
 
     def shortest_path(self, start, end):
         """
-        使用 Dijkstra 算法计算两点间电阻最小的路径
+        使用 Dijkstra 算法计算两点电阻最小的路径
 
         参数:
         start -- 起始节点
@@ -270,34 +270,34 @@ def main():
 
     # 示例动态操作
     while True:
-        action = input("\n选择操作（add_edge/delete_node/delete_edge/detect_cycles/all_paths_simulation/shortest_path/exit）：").strip().lower()
-        if action == "add_edge":
+        action = input("\n选择操作\n1 添加边\n2 删除节点\n3 删除边\n4 环路检测\n5 全路径仿真\n6 最短路径\n0 退出程序：").strip().lower()
+        if action == "1":
             try:
                 start, end, resistance = input("输入边信息（格式：起点 终点 电阻值）：").split()
                 graph.add_edge(start, end, float(resistance))
                 graph.display_graph()
             except ValueError:
                 print("电阻值必须为数字")
-        elif action == "delete_node":
+        elif action == "2":
             node = input("输入要删除的节点：")
             graph.delete_node(node)
             graph.display_graph()
-        elif action == "delete_edge":
+        elif action == "3":
             start, end = input("输入要删除的边（格式：起点 终点）：").split()
             graph.delete_edge(start, end)
             graph.display_graph()
-        elif action == "detect_cycles":
+        elif action == "4":
             graph.detect_cycles()
-        elif action == "all_paths_simulation":
+        elif action == "5":
             start, end = input("输入仿真的路径起点和终点（格式：起点 终点）：").split()
             graph.all_paths_simulation(start, end)
-        elif action == "shortest_path":
+        elif action == "6":
             try:
                 start, end = input("输入起点和终点（格式：起点 终点）：").split()
                 graph.shortest_path(start, end)
             except ValueError:
                 print("输入格式错误")
-        elif action == "exit":
+        elif action == "0":
             print("退出程序")
             break
         else:
