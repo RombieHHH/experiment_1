@@ -13,8 +13,7 @@ class CircuitAnalyzerGUI:
         self.main_frame = ttk.Frame(root, padding="10")
         self.main_frame.grid(row=0, column=0, sticky=(tk.W, tk.E, tk.N, tk.S))
 
-        # 创建所有界面组件
-        self.create_input_section()
+        # 创建界面组件
         self.create_operation_section()
         self.create_display_section()
 
@@ -216,9 +215,18 @@ class CircuitAnalyzerGUI:
         op_frame = ttk.LabelFrame(self.main_frame, text="操作", padding="5")
         op_frame.grid(row=1, column=0, padx=5, pady=5, sticky=tk.W)
 
-        ttk.Button(op_frame, text="检测环路", command=self.detect_cycles).grid(row=0, column=0, padx=5)
-        ttk.Button(op_frame, text="计算最短路径", command=self.show_shortest_path_dialog).grid(row=0, column=1, padx=5)
-        ttk.Button(op_frame, text="显示所有路径", command=self.show_all_paths_dialog).grid(row=0, column=2, padx=5)
+        # 第一行：基本操作按钮
+        ttk.Button(op_frame, text="添加边", command=self.show_add_edge_dialog).grid(row=0, column=0, padx=5, pady=5)
+        ttk.Button(op_frame, text="删除边", command=self.show_delete_edge_dialog).grid(row=0, column=1, padx=5, pady=5)
+        ttk.Button(op_frame, text="删除节点", command=self.show_delete_node_dialog).grid(row=0, column=2, padx=5,
+                                                                                         pady=5)
+
+        # 第二行：分析操作按钮
+        ttk.Button(op_frame, text="检测环路", command=self.detect_cycles).grid(row=1, column=0, padx=5, pady=5)
+        ttk.Button(op_frame, text="计算最短路径", command=self.show_shortest_path_dialog).grid(row=1, column=1, padx=5,
+                                                                                               pady=5)
+        ttk.Button(op_frame, text="显示所有路径", command=self.show_all_paths_dialog).grid(row=1, column=2, padx=5,
+                                                                                           pady=5)
 
     def create_display_section(self):
         # 配置主框架的权重，使显示区域可以自适应
@@ -300,6 +308,109 @@ class CircuitAnalyzerGUI:
             dialog.destroy()
 
         ttk.Button(dialog, text="计算", command=calculate).grid(row=1, column=0, columnspan=4, pady=10)
+
+    def show_delete_node_dialog(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("删除节点")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        ttk.Label(dialog, text="节点名称:").grid(row=0, column=0, padx=5, pady=5)
+        node_entry = ttk.Entry(dialog, width=10)
+        node_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        def delete():
+            node = node_entry.get().strip()
+            if node:
+                self.graph.delete_node(node)
+                self.update_display()
+                dialog.destroy()
+            else:
+                messagebox.showerror("错误", "请输入节点名称")
+
+        button_frame = ttk.Frame(dialog)
+        button_frame.grid(row=1, column=0, columnspan=2, pady=10)
+        ttk.Button(button_frame, text="取消", command=dialog.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(button_frame, text="删除", command=delete).pack(side=tk.RIGHT, padx=5)
+
+    def show_delete_edge_dialog(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("删除边")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # 起点输入
+        ttk.Label(dialog, text="起点:").grid(row=0, column=0, padx=5, pady=5)
+        start_entry = ttk.Entry(dialog, width=10)
+        start_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # 终点输入
+        ttk.Label(dialog, text="终点:").grid(row=0, column=2, padx=5, pady=5)
+        end_entry = ttk.Entry(dialog, width=10)
+        end_entry.grid(row=0, column=3, padx=5, pady=5)
+
+        def delete():
+            start = start_entry.get().strip()
+            end = end_entry.get().strip()
+            if start and end:
+                self.graph.delete_edge(start, end)
+                self.update_display()
+                dialog.destroy()
+            else:
+                messagebox.showerror("错误", "请输入起点和终点")
+
+        button_frame = ttk.Frame(dialog)
+        button_frame.grid(row=1, column=0, columnspan=4, pady=10)
+        ttk.Button(button_frame, text="取消", command=dialog.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(button_frame, text="删除", command=delete).pack(side=tk.RIGHT, padx=5)
+
+    def show_add_edge_dialog(self):
+        dialog = tk.Toplevel(self.root)
+        dialog.title("添加边")
+        dialog.transient(self.root)
+        dialog.grab_set()
+
+        # 输入框架
+        input_frame = ttk.Frame(dialog)
+        input_frame.pack(padx=10, pady=5)
+
+        # 起点输入
+        ttk.Label(input_frame, text="起点:").grid(row=0, column=0, padx=5, pady=5)
+        start_entry = ttk.Entry(input_frame, width=10)
+        start_entry.grid(row=0, column=1, padx=5, pady=5)
+
+        # 终点输入
+        ttk.Label(input_frame, text="终点:").grid(row=0, column=2, padx=5, pady=5)
+        end_entry = ttk.Entry(input_frame, width=10)
+        end_entry.grid(row=0, column=3, padx=5, pady=5)
+
+        # 电阻值输入
+        ttk.Label(input_frame, text="电阻值:").grid(row=0, column=4, padx=5, pady=5)
+        resistance_entry = ttk.Entry(input_frame, width=10)
+        resistance_entry.grid(row=0, column=5, padx=5, pady=5)
+
+        def add():
+            try:
+                start = start_entry.get().strip()
+                end = end_entry.get().strip()
+                resistance = resistance_entry.get().strip()
+
+                if not all([start, end, resistance]):
+                    messagebox.showerror("错误", "请填写所有字段")
+                    return
+
+                self.graph.add_edge(start, end, float(resistance))
+                self.update_display()
+                dialog.destroy()
+
+            except ValueError:
+                messagebox.showerror("错误", "电阻值必须为数字")
+
+        # 按钮框架
+        button_frame = ttk.Frame(dialog)
+        button_frame.pack(fill=tk.X, pady=10)
+        ttk.Button(button_frame, text="取消", command=dialog.destroy).pack(side=tk.RIGHT, padx=5)
+        ttk.Button(button_frame, text="添加", command=add).pack(side=tk.RIGHT, padx=5)
 
     def show_all_paths_dialog(self):
         dialog = tk.Toplevel(self.root)
